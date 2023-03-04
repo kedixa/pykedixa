@@ -105,7 +105,7 @@ class CommunicateBase:
         read into buffer and return nbytes,
         else return a copy of data.
         '''
-        buf: WritableBuffer = buffer if buffer else bytearray(nbytes)
+        buf: WritableBuffer = bytearray(nbytes) if buffer is None else buffer
         pos = 0
 
         with memoryview(buf) as view:
@@ -116,7 +116,7 @@ class CommunicateBase:
 
         assert pos == nbytes
 
-        return nbytes if buffer else buf
+        return buf if buffer is None else nbytes
 
     async def write(self, buffer: ReadableBuffer) -> int:
         '''Write data into this object, return the number of bytes write.'''
@@ -162,6 +162,7 @@ class BasicAdaptor(CommunicateBase):
 
 class BasicFilter(CommunicateBase):
     def __init__(self):
+        super().__init__()
         self._nxt: CommunicateBase = None
 
     def bind_next(self, nxt: Union[BasicAdaptor, 'BasicFilter']):
@@ -206,11 +207,11 @@ class ReadUntilFilter(BasicFilter):
                 del self._data[:max_bytes]
                 dlen = max_bytes
 
-            if buffer:
+            if buffer is None:
+                return data
+            else:
                 buffer[:len(data)] = data
                 return dlen
-            else:
-                return data
         else:
             return await self._nxt.read(max_bytes, buffer=buffer)
 
@@ -237,6 +238,7 @@ class ReadUntilFilter(BasicFilter):
 
 class LoopbackAdaptor(BasicAdaptor):
     def __init__(self, maxsize: int = DEFAULT_LOOPBACK_ADAPTOR_MEMSIZE):
+        super().__init__()
         self._lst: List[ReadableBuffer] = []
         self._size: int = 0
         self._maxsize: int = maxsize
@@ -249,7 +251,7 @@ class LoopbackAdaptor(BasicAdaptor):
         if self._size == 0:
             raise AdaptorEofError('LoopbackAdaptor: no more data')
 
-        buf = buffer if buffer else bytearray(max_bytes)
+        buf = bytearray(max_bytes) if buffer is None else buffer
         pos = 0
 
         for i in range(len(self._lst)):
@@ -266,7 +268,7 @@ class LoopbackAdaptor(BasicAdaptor):
                 break
 
         self._size -= max_bytes
-        return max_bytes if buffer else buf
+        return buf if buffer is None else max_bytes
 
     async def write(self, buffer: ReadableBuffer) -> int:
         if self._size >= self._maxsize:
@@ -283,4 +285,30 @@ class LoopbackAdaptor(BasicAdaptor):
         self._size += tot
 
         return tot
+
+
+class StrHelper:
+    def __init__(self, indent: int = 2, level: int = 0):
+        self._indent: int = indent
+        self._level: int  = level
+        self._str_lst: List[str] = []
+        self._indent_str: str = str()
+
+        self.change_level(0)
+
+    def __enter__(self):
+        self.change_level(1)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.change_level(-1)
+
+    def change_level(self, x: int):
+        self._level += x
+        self._indent_str = ' ' * (self._indent * self._level)
+
+    def append(self, s: str):
+        self._str_lst.append(self._indent_str + s)
+
+    def join(self, sep: str = '\n') -> str:
+        return sep.join(self._str_lst)
 

@@ -8,6 +8,8 @@ from .basic import (
     ReadUntilFilter,
 
     BadMessage,
+
+    StrHelper,
 )
 
 __all__ = [
@@ -63,19 +65,17 @@ class HttpHeaderMap:
         return name.lower() in self._hd_map
 
     def __str__(self) -> str:
-        return self._to_str()
+        h = StrHelper()
+        self._to_str(h)
+        return h.join()
 
-    def __repr__(self) -> str:
-        return str(self)
+    def _to_str(self, str_helper: StrHelper):
+        str_helper.append(f'HttpHeaderMap at {hex(id(self))}')
 
-    def _to_str(self, indent=0) -> str:
-        idt = ' ' * indent
-        s = f'{idt} HttpHeaderMap at {hex(id(0))}\n'
-
-        for headers in self._hd_map.values():
-            s += f'{idt}  {headers.name}: {headers.values}\n'
-
-        return s
+        with str_helper:
+            for headers in self._hd_map.values():
+                for value in headers.values:
+                    str_helper.append(f'{headers.name}: {value}')
 
     def format_header(self) -> str:
         data = []
@@ -144,6 +144,25 @@ class HttpMessage(MessageBase):
         self._empty_body: bool          = False
         # for decode
         self._status_line: str          = None
+
+    def __str__(self) -> str:
+        h = StrHelper()
+        self._to_str(h)
+        return h.join()
+
+    def _format_status_line(self) -> str:
+        # subclasses should implement it for _to_str
+        return self._http_version
+
+    def _to_str(self, str_helper: StrHelper):
+        name = self.__class__.__name__
+        body_len = len(self._body) if self._body else 0
+
+        str_helper.append(f'{name} at {hex(id(self))}')
+        with str_helper:
+            str_helper.append(self._format_status_line())
+            self._headers._to_str(str_helper)
+            str_helper.append(f'HttpBody(bytes) at {hex(id(self._body))} with length {body_len}')
 
     def get_http_version(self) -> str:
         return self._http_version
@@ -305,6 +324,9 @@ class HttpRequest(HttpMessage):
         self._method: HttpMethod    = method
         self._req_url: str          = req_url
 
+    def _format_status_line(self) -> str:
+        return f'{self._method.name} {self._req_url} {self._http_version}'
+
     def set_method(self, method: HttpMethod):
         self._method = method
 
@@ -363,6 +385,9 @@ class HttpResponse(HttpMessage):
 
         self._status_code: int = status_code
         self._status_desc: str = status_desc
+
+    def _format_status_line(self) -> str:
+        return f'{self._http_version} {self._status_code} {self._status_desc}'
 
     def set_status_code(self, status_code: int):
         self._status_code = status_code
