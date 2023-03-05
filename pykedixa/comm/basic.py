@@ -258,13 +258,18 @@ class LoopbackAdaptor(BasicAdaptor):
             data = self._lst[i]
             dlen = len(data)
 
-            if dlen + pos <= max_bytes:
+            # < rather than <=, make sure the last read always
+            # run into else
+            if dlen + pos < max_bytes:
                 buf[pos:pos+dlen] = data
             else:
-                dlen = max_bytes - pos
-                buf[pos:pos+dlen] = data[:dlen]
-                self._lst[i] = data[dlen:]
-                self._lst = self._lst[i:]
+                n = max_bytes - pos
+                buf[pos:pos+n] = data[:n]
+                if n == dlen:
+                    self._lst = self._lst[i+1:]
+                else:
+                    self._lst[i] = data[n:]
+                    self._lst = self._lst[i:]
                 break
 
         self._size -= max_bytes
