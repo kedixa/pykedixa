@@ -262,6 +262,7 @@ class LoopbackAdaptor(BasicAdaptor):
             # run into else
             if dlen + pos < max_bytes:
                 buf[pos:pos+dlen] = data
+                pos += dlen
             else:
                 n = max_bytes - pos
                 buf[pos:pos+n] = data[:n]
