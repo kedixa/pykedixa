@@ -136,6 +136,9 @@ class HttpMessage(MessageBase):
             http_version: str,
             headers: List[Tuple[str, str]],
             body: bytes):
+        if isinstance(body, str):
+            body = body.encode()
+
         self._http_version: str         = http_version
         self._headers: HttpHeaderMap    = HttpHeaderMap(headers)
         self._body: bytes               = body
