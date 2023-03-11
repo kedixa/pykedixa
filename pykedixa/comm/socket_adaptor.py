@@ -49,20 +49,33 @@ class SyncTcpAdaptor(BasicAdaptor):
     async def write(self, buffer: ReadableBuffer) -> int:
         return self._socket.send(buffer)
 
+
 class TcpAdaptor(BasicAdaptor):
     def __init__(self, addr, *, family=socket.AF_INET, proto=0):
         self._addr          = addr
         self._family: int   = family
         self._proto: int    = proto
+        self._server_side: bool = False
         self._reader: asyncio.StreamReader = None
         self._writer: asyncio.StreamWriter = None
 
+    def set_server_side(self,
+            r: asyncio.StreamReader,
+            w: asyncio.StreamWriter) -> 'TcpAdaptor':
+        assert self._reader is None and self._writer is None
+        assert r is not None and w is not None
+        self._server_side = True
+        self._reader = r
+        self._writer = w
+        return self
+
     async def prepare(self):
-        addr = self._addr
-        self._reader, self._writer = await asyncio.open_connection(
-            host=addr[0], port=addr[1], family=self._family,
-            proto=self._proto
-        )
+        if not self._server_side:
+            addr = self._addr
+            self._reader, self._writer = await asyncio.open_connection(
+                host=addr[0], port=addr[1], family=self._family,
+                proto=self._proto
+            )
 
     async def finish(self):
         if self._writer.can_write_eof():
