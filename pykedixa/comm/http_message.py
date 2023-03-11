@@ -1,16 +1,15 @@
 import enum
 from typing import List, Tuple, Dict, Union
 
+from .exception import BadMessage
 from .basic import (
     MessageBase,
     CommunicateBase,
     CommFlags,
-    ReadUntilFilter,
-
-    BadMessage,
 
     StrHelper,
 )
+from .read_until_filter import ReadUntilFilter
 
 __all__ = [
     'HttpHeaders',

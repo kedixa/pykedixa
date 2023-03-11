@@ -1,19 +1,19 @@
 import enum
 from typing import Union, List
 
+from .exception import (
+    AdaptorException,
+    AdaptorEofError,
+)
+
+
 __all__ = [
     'CommFlags',
-    'CommException',
-    'AdaptorException',
-    'AdaptorEofError',
-    'FilterException',
-    'BadMessage',
 
     'CommunicateBase',
     'MessageBase',
     'BasicAdaptor',
     'BasicFilter',
-    'ReadUntilFilter',
     'LoopbackAdaptor',
 
     'ReadableBuffer',
@@ -34,34 +34,6 @@ DEFAULT_LOOPBACK_ADAPTOR_MEMSIZE: int = 2 ** 24
 class CommFlags(enum.IntFlag):
     # Support self.read_until, for example ReadUntilFilter
     READ_UNTIL      = 1
-
-
-class CommException(Exception):
-    def __init__(self, what: str, *args):
-        self._what: str = what
-        self._args      = args
-
-    def __str__(self) -> str:
-        return f'{self._what} args:{self._args}'
-
-    def what(self) -> str:
-        return self._what
-
-
-class AdaptorException(CommException):
-    pass
-
-
-class AdaptorEofError(AdaptorException):
-    pass
-
-
-class FilterException(CommException):
-    pass
-
-
-class BadMessage(CommException):
-    pass
 
 
 class CommunicateBase:
@@ -182,58 +154,6 @@ class BasicFilter(CommunicateBase):
 
     async def flush(self):
         return await self._nxt.flush()
-
-
-class ReadUntilFilter(BasicFilter):
-    SUPPORTED_FLAGS = BasicFilter.SUPPORTED_FLAGS | CommFlags.READ_UNTIL
-
-    def __init__(self):
-        super().__init__()
-        self._data: bytearray = bytearray()
-
-    async def finish(self):
-        if self._data:
-            raise FilterException('BadFilterState: data is not empty when finish', self._data)
-
-    async def read(self, max_bytes: int = -1, *,
-            buffer: WritableBuffer = None) -> ReadRetType:
-        dlen = len(self._data)
-
-        if dlen > 0:
-            if max_bytes < 0 or max_bytes >= dlen:
-                data, self._data = self._data, bytearray()
-            else:
-                data = self._data[:max_bytes]
-                del self._data[:max_bytes]
-                dlen = max_bytes
-
-            if buffer is None:
-                return data
-            else:
-                buffer[:len(data)] = data
-                return dlen
-        else:
-            return await self._nxt.read(max_bytes, buffer=buffer)
-
-    async def read_until(self, delimiter: bytes, max_bytes: int = -1) -> ReadableBuffer:
-        end_pos = self._data.find(delimiter)
-        end_len = len(delimiter)
-
-        while end_pos < 0:
-            old_len = len(self._data)
-            if max_bytes >= 0 and old_len > max_bytes:
-                raise BadMessage(f'DelimiterNotFound: max_bytes:{max_bytes}')
-
-            mbytes = max_bytes if max_bytes < 0 else max_bytes - old_len
-            self._data.extend(await self._nxt.read(mbytes))
-
-            last_pos = max(0, old_len - end_len)
-            end_pos = self._data.find(delimiter, last_pos)
-
-        end_pos += end_len
-        data = self._data[:end_pos]
-        del self._data[:end_pos]
-        return data
 
 
 class LoopbackAdaptor(BasicAdaptor):
