@@ -198,19 +198,21 @@ class LoopbackAdaptor(BasicAdaptor):
 
     async def write(self, buffer: ReadableBuffer) -> int:
         if self._size >= self._maxsize:
-            raise AdaptorException('LoopbackAdaptor: memory limit exceeded',
-                                   self._maxsize)
+            err = 'LoopbackAdaptor: memory limit exceeded'
+            raise AdaptorException(err, maxsize=self._maxsize)
 
-        tot = len(buffer)
+        buf = buffer
+        blen = len(buf)
 
-        if self._size + tot > self._maxsize:
-            tot = self._maxsize - self._size
-            buffer = buffer[:tot]
+        if self._size + blen > self._maxsize:
+            blen = self._maxsize - self._size
 
-        self._lst.append(buffer)
-        self._size += tot
+        # make a copy of buffer when save info local list,
+        # buffer may be a memoryview reference to another byte array
+        self._lst.append(buf[:blen])
+        self._size += blen
 
-        return tot
+        return blen
 
 
 class StrHelper:
