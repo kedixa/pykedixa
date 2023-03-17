@@ -51,23 +51,31 @@ class SyncTcpAdaptor(BasicAdaptor):
 
 
 class TcpAdaptor(BasicAdaptor):
-    def __init__(self, addr, *, family=socket.AF_INET, proto=0):
+    def __init__(self, addr, *,
+            family: int = socket.AF_INET,
+            proto: int = 0,
+            reader: asyncio.StreamReader = None,
+            writer: asyncio.StreamWriter = None,
+            close_on_finish: bool = True):
+        '''
+        If both reader and writer is not None,
+        indicate that this is a server side adaptor;
+        and they will be closed when self.finish if close_on_finish.
+        '''
         self._addr          = addr
         self._family: int   = family
         self._proto: int    = proto
-        self._server_side: bool = False
-        self._reader: asyncio.StreamReader = None
-        self._writer: asyncio.StreamWriter = None
 
-    def set_server_side(self,
-            r: asyncio.StreamReader,
-            w: asyncio.StreamWriter) -> 'TcpAdaptor':
-        assert self._reader is None and self._writer is None
-        assert r is not None and w is not None
-        self._server_side = True
-        self._reader = r
-        self._writer = w
-        return self
+        self._server_side: bool
+        self._close_on_finish: bool = close_on_finish
+        self._reader: asyncio.StreamReader = reader
+        self._writer: asyncio.StreamWriter = writer
+
+        if reader is not None and writer is not None:
+            self._server_side = True
+        else:
+            assert reader is None and writer is None
+            self._server_side = False
 
     async def prepare(self):
         if not self._server_side:
@@ -78,6 +86,9 @@ class TcpAdaptor(BasicAdaptor):
             )
 
     async def finish(self):
+        if self._server_side and not self._close_on_finish:
+            return
+
         if self._writer.can_write_eof():
             self._writer.write_eof()
 
