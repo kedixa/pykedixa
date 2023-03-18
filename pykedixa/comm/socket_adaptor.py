@@ -59,7 +59,7 @@ class TcpAdaptor(BasicAdaptor):
             close_on_finish: bool = True):
         '''
         If both reader and writer is not None,
-        indicate that this is a server side adaptor;
+        adaptor will use them without create a new one;
         and they will be closed when self.finish if close_on_finish.
         '''
         self._addr          = addr
