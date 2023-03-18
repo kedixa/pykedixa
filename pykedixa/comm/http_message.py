@@ -10,6 +10,7 @@ from .basic import (
     StrHelper,
 )
 from .read_until_filter import ReadUntilFilter
+from .http_code_map import get_http_code_phrase
 
 __all__ = [
     'HttpHeaders',
@@ -103,7 +104,7 @@ class HttpHeaderMap:
         else:
             hd.add_list(values)
 
-    def set_header(self, name: str, value: str):
+    def set_header(self, name: str, value: Union[List[str], str]):
         self.add_header(name, value, reset=True)
 
     def get_header(self, name: str) -> Union[List[str], None]:
@@ -289,8 +290,9 @@ class HttpMessage(MessageBase):
     def add_header(self, name: str, value: str):
         self._headers.add_header(name, value)
 
-    def set_header(self, name: str, value: str):
-        self._headers.set_header(name, value)
+    def set_header(self, name: str, value: str, *, overwrite: bool = True):
+        if overwrite or name not in self._headers:
+            self._headers.set_header(name, value)
 
     def del_header(self, name: str):
         self._headers.del_header(name)
@@ -378,7 +380,7 @@ class HttpResponse(HttpMessage):
     def __init__(self, *,
             http_version: str = 'HTTP/1.1',
             status_code: int = 200,
-            status_desc: str = 'OK',
+            reason_phrase: str = 'OK',
             headers: List[Tuple[str, str]] = None,
             body: bytes = bytes()):
         super().__init__(http_version=http_version,
@@ -386,22 +388,23 @@ class HttpResponse(HttpMessage):
                 body=body)
 
         self._status_code: int = status_code
-        self._status_desc: str = status_desc
+        self._reason_phrase: str = reason_phrase
 
     def _format_status_line(self) -> str:
-        return f'{self._http_version} {self._status_code} {self._status_desc}'
+        return f'{self._http_version} {self._status_code} {self._reason_phrase}'
 
-    def set_status_code(self, status_code: int):
+    def set_http_status(self, status_code: int, reason_phrase: str = None):
+        if reason_phrase is None:
+            reason_phrase = get_http_code_phrase(status_code)
+
         self._status_code = status_code
+        self._reason_phrase = reason_phrase
 
     def get_status_code(self) -> int:
         return self._status_code
 
-    def set_status_desc(self, status_desc: str):
-        self._status_desc = status_desc
-
-    def get_status_desc(self) -> str:
-        return self._status_desc
+    def get_reason_phrase(self) -> str:
+        return self._reason_phrase
 
     async def encode(self, c: CommunicateBase):
         if not self.is_empty_body():
@@ -410,7 +413,7 @@ class HttpResponse(HttpMessage):
             if self._chunk_encoding():
                 self.del_header('Transfer-Encoding')
 
-        data = f'{self._http_version} {self._status_code} {self._status_desc}\r\n'
+        data = f'{self._http_version} {self._status_code} {self._reason_phrase}\r\n'
         data = data + self._headers.format_header() + '\r\n'
         data = data.encode()
 
@@ -426,7 +429,7 @@ class HttpResponse(HttpMessage):
         while len(st) < 3:
             st.append('')
 
-        self._http_version, code, self._status_desc = st
+        self._http_version, code, self._reason_phrase = st
         if not code.isdecimal():
             raise BadMessage(f'BadHttpMessage: bad status code {code}')
 
