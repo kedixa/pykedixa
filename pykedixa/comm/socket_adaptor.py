@@ -12,6 +12,7 @@ from .basic import (
     WritableBuffer,
     DEFAULT_MAX_READ_SIZE,
 )
+from .address import SocketAddress
 
 __all__ = [
     'SyncTcpAdaptor',
@@ -20,12 +21,12 @@ __all__ = [
 
 
 class SyncTcpAdaptor(BasicAdaptor):
-    def __init__(self, addr, *, family=socket.AF_INET, proto=0):
-        self._addr = addr
-        self._socket = socket.socket(family, socket.SOCK_STREAM, proto)
+    def __init__(self, addr: SocketAddress):
+        self._addr: SocketAddress = addr
+        self._socket = socket.socket(addr.family, socket.SOCK_STREAM, addr.proto)
 
     async def prepare(self):
-        self._socket.connect(self._addr)
+        self._socket.connect((self._addr.ip, self._addr.port))
 
     async def finish(self):
         self._socket.close()
@@ -51,9 +52,7 @@ class SyncTcpAdaptor(BasicAdaptor):
 
 
 class TcpAdaptor(BasicAdaptor):
-    def __init__(self, addr, *,
-            family: int = socket.AF_INET,
-            proto: int = 0,
+    def __init__(self, addr: SocketAddress, *,
             reader: asyncio.StreamReader = None,
             writer: asyncio.StreamWriter = None,
             close_on_finish: bool = True):
@@ -62,9 +61,7 @@ class TcpAdaptor(BasicAdaptor):
         adaptor will use them without create a new one;
         and they will be closed when self.finish if close_on_finish.
         '''
-        self._addr          = addr
-        self._family: int   = family
-        self._proto: int    = proto
+        self._addr: SocketAddress = addr
 
         self._server_side: bool
         self._close_on_finish: bool = close_on_finish
@@ -77,12 +74,16 @@ class TcpAdaptor(BasicAdaptor):
             assert reader is None and writer is None
             self._server_side = False
 
+    @property
+    def addr(self) -> SocketAddress:
+        return self._addr
+
     async def prepare(self):
         if not self._server_side:
             addr = self._addr
             self._reader, self._writer = await asyncio.open_connection(
-                host=addr[0], port=addr[1], family=self._family,
-                proto=self._proto
+                host=addr.ip, port=addr.port, family=addr.family,
+                proto=addr.proto
             )
 
     async def finish(self):

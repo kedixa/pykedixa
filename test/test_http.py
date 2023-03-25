@@ -6,20 +6,12 @@ from typing import List
 import pytest
 from kedixa.comm import *
 
-async def getaddrinfo(host: str, port: int):
-    loop = asyncio.get_event_loop()
-    addrs = await loop.getaddrinfo(host, port, family=socket.AF_INET, type=socket.SOCK_STREAM)
-
-    assert len(addrs) > 0
-    return addrs[0]
-
 async def do_http(host: str, port: int,
         reqs: List[HttpRequest],
         resps: List[HttpResponse]):
-    addr = await getaddrinfo(host, port)
-    sock = TcpAdaptor(addr[4],
-        family=addr[0],
-        proto=addr[2])
+    addrs = await getaddrinfo(host, port)
+    assert len(addrs) > 0
+    sock = TcpAdaptor(addrs[0])
     runtil = ReadUntilFilter()
 
     runtil.bind_next(sock)
@@ -33,10 +25,9 @@ async def do_http(host: str, port: int,
 async def do_https(host: str, port: int,
         reqs: List[HttpRequest],
         resps: List[HttpResponse]):
-    addr = await getaddrinfo(host, port)
-    sock = TcpAdaptor(addr[4],
-        family=addr[0],
-        proto=addr[2])
+    addrs = await getaddrinfo(host, port)
+    assert len(addrs) > 0
+    sock = TcpAdaptor(addrs[0])
 
     ssl_ctx = ssl.create_default_context()
     ssl_filter = SslFilter(ssl_ctx, server_hostname=host)
