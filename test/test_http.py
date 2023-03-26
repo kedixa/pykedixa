@@ -1,5 +1,3 @@
-import asyncio
-import socket
 import ssl
 from typing import List
 
