@@ -3,6 +3,7 @@ from typing import List
 
 import pytest
 from kedixa.comm import *
+from kedixa.comm.http import *
 
 async def do_http(host: str, port: int,
         reqs: List[HttpRequest],

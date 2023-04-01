@@ -1,15 +1,15 @@
 import enum
 from typing import List, Tuple, Dict, Union
 
-from .exception import BadMessage
-from .basic import (
+from ..exception import BadMessage
+from ..basic import (
     MessageBase,
     CommunicateBase,
     CommFlags,
 
     StrHelper,
 )
-from .read_until_filter import ReadUntilFilter
+from ..read_until_filter import ReadUntilFilter
 from .http_code_map import get_http_code_phrase
 
 __all__ = [

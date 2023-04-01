@@ -12,10 +12,16 @@ setup(
     author='kedixa',
     description='kedixa\'s personal python toy library',
     url='https://github.com/kedixa/pykedixa/',
-    packages=['kedixa', 'kedixa.comm'],
+    packages=[
+        'kedixa',
+        'kedixa.comm',
+        'kedixa.comm.http'
+    ],
+
     package_dir={
-        'kedixa.comm': 'pykedixa/comm',
         'kedixa': 'pykedixa',
+        'kedixa.comm': 'pykedixa/comm',
+        'kedixa.comm.http': 'pykedixa/comm/http',
     },
     install_requires=[],
     python_requires='>=3.6'

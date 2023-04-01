@@ -1,7 +1,13 @@
 # kedixa's personal python toy library
 
 ## Build
-TODO
+
+### Linux
+Dependency: setuptools, wheel
+
+```bash
+make build
+```
 
 ## License
 TODO

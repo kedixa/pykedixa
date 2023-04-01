@@ -1,8 +1,8 @@
-import asyncio
 import os
 
 import pytest
 from kedixa.comm import *
+from kedixa.comm.http import *
 
 @pytest.mark.asyncio
 async def test_file_adaptor():

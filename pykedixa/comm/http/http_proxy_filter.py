@@ -1,11 +1,12 @@
 from typing import List, Tuple
 
-from .basic import BasicFilter
-from .exception import FilterException
+from ..basic import BasicFilter
+from ..exception import FilterException
 from .http_message import HttpRequest, HttpResponse, HttpMethod
 
 __all__ = [
     'HttpProxyFilter',
+    'HttpProxyConnectError',
 ]
 
 def _proxy_auth(user: str, passwd: str) -> str:
