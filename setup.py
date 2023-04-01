@@ -15,13 +15,15 @@ setup(
     packages=[
         'kedixa',
         'kedixa.comm',
-        'kedixa.comm.http'
+        'kedixa.comm.http',
+        'kedixa.comm.websocket',
     ],
 
     package_dir={
         'kedixa': 'pykedixa',
         'kedixa.comm': 'pykedixa/comm',
         'kedixa.comm.http': 'pykedixa/comm/http',
+        'kedixa.comm.websocket': 'pykedixa/comm/websocket',
     },
     install_requires=[],
     python_requires='>=3.6'
