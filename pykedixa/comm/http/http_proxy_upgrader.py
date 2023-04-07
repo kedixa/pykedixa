@@ -5,7 +5,7 @@ from ..exception import TransformerException
 from .http_message import HttpRequest, HttpResponse, HttpMethod
 
 __all__ = [
-    'HttpProxyUpdater',
+    'HttpProxyUpgrader',
     'HttpProxyConnectError',
 ]
 
@@ -40,7 +40,7 @@ class HttpProxyConnectError(TransformerException):
         return self._resp
 
 
-class HttpProxyUpdater(BasicTransformer):
+class HttpProxyUpgrader(BasicTransformer):
     def __init__(self,
             host: str,
             port: int,
