@@ -1,5 +1,5 @@
 from ..basic import (
-    BasicFilter,
+    BasicTransformer,
 
     WritableBuffer,
     ReadableBuffer,
@@ -7,13 +7,13 @@ from ..basic import (
 )
 from ..exception import (
     BadMessage,
-    FilterEofError,
+    TransformerEofError,
 )
-from ..read_until_filter import ReadUntilFilter
+from ..read_until_transformer import ReadUntilTransformer
 
-__all__ = ['HttpChunkFilter']
+__all__ = ['HttpChunkTransformer']
 
-class HttpChunkFilter(BasicFilter):
+class HttpChunkTransformer(BasicTransformer):
     def __init__(self):
         self._buf: bytearray    = bytearray()
         self._buflen: int       = 0
@@ -21,7 +21,7 @@ class HttpChunkFilter(BasicFilter):
     async def _next_chunk(self):
         line_end = b'\r\n'
         end_len = len(line_end)
-        r: ReadUntilFilter = self._nxt
+        r: ReadUntilTransformer = self._nxt
 
         data: bytes = await r.read_until(line_end)
         data = data[:-2]
@@ -44,7 +44,7 @@ class HttpChunkFilter(BasicFilter):
         if self._buflen == 0:
             await self._next_chunk()
             if self._buflen == 0:
-                raise FilterEofError('HttpChunkFilterEof')
+                raise TransformerEofError('HttpChunkTransformerEof')
 
         if max_bytes < 0 or self._buflen <= max_bytes:
             nread = self._buflen

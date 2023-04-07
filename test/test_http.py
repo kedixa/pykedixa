@@ -11,7 +11,7 @@ async def do_http(host: str, port: int,
     addrs = await getaddrinfo(host, port)
     assert len(addrs) > 0
     sock = TcpAdaptor(addrs[0])
-    runtil = ReadUntilFilter()
+    runtil = ReadUntilTransformer()
 
     runtil.bind_next(sock)
 
@@ -29,13 +29,13 @@ async def do_https(host: str, port: int,
     sock = TcpAdaptor(addrs[0])
 
     ssl_ctx = ssl.create_default_context()
-    ssl_filter = SslFilter(ssl_ctx, server_hostname=host)
-    runtil = ReadUntilFilter()
+    ssl_tx = SslTransformer(ssl_ctx, server_hostname=host)
+    runtil = ReadUntilTransformer()
 
-    ssl_filter.bind_next(sock)
-    runtil.bind_next(ssl_filter)
+    ssl_tx.bind_next(sock)
+    runtil.bind_next(ssl_tx)
 
-    async with sock, ssl_filter, runtil as conn:
+    async with sock, ssl_tx, runtil as conn:
         for req in reqs:
             await req.encode(conn)
         for resp in resps:

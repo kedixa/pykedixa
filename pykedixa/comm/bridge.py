@@ -3,7 +3,7 @@ from .basic import (
 )
 from .exception import (
     AdaptorEofError,
-    FilterEofError,
+    TransformerEofError,
 )
 
 __all__ = [
@@ -45,7 +45,7 @@ class CommBridge:
 
             try:
                 nread: int = await self._from.read(rlen, buffer=buf)
-            except (AdaptorEofError, FilterEofError):
+            except (AdaptorEofError, TransformerEofError):
                 break
 
             with memoryview(buf) as view:

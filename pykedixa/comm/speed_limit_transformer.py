@@ -3,7 +3,7 @@ import time
 import math
 
 from .basic import (
-    BasicFilter,
+    BasicTransformer,
 
     ReadableBuffer,
     WritableBuffer,
@@ -14,7 +14,7 @@ from .exception import (
 )
 
 __all__ = [
-    'SpeedLimitFilter',
+    'SpeedLimitTransformer',
 ]
 
 
@@ -45,7 +45,7 @@ def _get_hint(bps: float) -> int:
     return hint
 
 
-class SpeedLimitFilter(BasicFilter):
+class SpeedLimitTransformer(BasicTransformer):
     def __init__(self, *,
             r_bytes: float = None, r_kbytes: float = None, r_mbytes: float = None,
             w_bytes: float = None, w_kbytes: float = None, w_mbytes: float = None):

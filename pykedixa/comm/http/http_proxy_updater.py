@@ -1,11 +1,11 @@
 from typing import List, Tuple
 
-from ..basic import BasicFilter
-from ..exception import FilterException
+from ..basic import BasicTransformer
+from ..exception import TransformerException
 from .http_message import HttpRequest, HttpResponse, HttpMethod
 
 __all__ = [
-    'HttpProxyFilter',
+    'HttpProxyUpdater',
     'HttpProxyConnectError',
 ]
 
@@ -16,7 +16,7 @@ def _proxy_auth(user: str, passwd: str) -> str:
     return f'Basic {auth}'
 
 
-class HttpProxyConnectError(FilterException):
+class HttpProxyConnectError(TransformerException):
     def __init__(self, host: str, port: int, resp: HttpResponse):
         what = f'host:{host} port:{port} http_status:{resp.get_status_code()}'
         super().__init__(what)
@@ -40,7 +40,7 @@ class HttpProxyConnectError(FilterException):
         return self._resp
 
 
-class HttpProxyFilter(BasicFilter):
+class HttpProxyUpdater(BasicTransformer):
     def __init__(self,
             host: str,
             port: int,
@@ -52,6 +52,9 @@ class HttpProxyFilter(BasicFilter):
         self._username = username
         self._password = password
         self._headers = headers if headers is not None else []
+
+    def prepare_only(self) -> bool:
+        return True
 
     async def prepare(self):
         host_hd = f'{self._host}:{self._port}'

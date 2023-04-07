@@ -12,7 +12,7 @@ def abs(f: float):
 @pytest.mark.asyncio
 async def test_speed_limit():
     lo = LoopbackAdaptor(maxsize=BUF_SIZE+1)
-    sl = SpeedLimitFilter(w_mbytes=16, r_mbytes=8)
+    sl = SpeedLimitTransformer(w_mbytes=16, r_mbytes=8)
     sl.bind_next(lo)
 
     async with lo, sl as c:

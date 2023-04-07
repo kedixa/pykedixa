@@ -1,5 +1,5 @@
 from .basic import (
-    BasicFilter,
+    BasicTransformer,
     CommFlags,
 
     WritableBuffer,
@@ -7,15 +7,15 @@ from .basic import (
     ReadRetType,
 )
 from .exception import (
-    FilterException,
+    TransformerException,
     BadMessage,
 )
 
-__all__ = ['ReadUntilFilter']
+__all__ = ['ReadUntilTransformer']
 
 
-class ReadUntilFilter(BasicFilter):
-    SUPPORTED_FLAGS = BasicFilter.SUPPORTED_FLAGS | CommFlags.READ_UNTIL
+class ReadUntilTransformer(BasicTransformer):
+    SUPPORTED_FLAGS = BasicTransformer.SUPPORTED_FLAGS | CommFlags.READ_UNTIL
 
     def __init__(self):
         super().__init__()
@@ -23,7 +23,7 @@ class ReadUntilFilter(BasicFilter):
 
     async def finish(self):
         if self._data:
-            raise FilterException('BadFilterState: data is not empty when finish', self._data)
+            raise TransformerException('BadTransformerState: data is not empty when finish', self._data)
 
     async def read(self, max_bytes: int = -1, *,
             buffer: WritableBuffer = None) -> ReadRetType:

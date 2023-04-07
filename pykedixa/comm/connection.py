@@ -4,7 +4,7 @@ from typing import List
 from .basic import (
     CommunicateBase,
     BasicAdaptor,
-    BasicFilter,
+    BasicTransformer,
     MessageBase,
 )
 
@@ -62,7 +62,7 @@ class Connection:
                 await self._adaptor.finish()
                 raise
 
-    async def bind(self, next: BasicFilter):
+    async def bind(self, next: BasicTransformer):
         if len(self._comms) == 0:
             next.bind_next(self._adaptor)
         else:

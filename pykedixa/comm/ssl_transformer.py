@@ -2,7 +2,7 @@ import ssl
 # import logging
 
 from .basic import (
-    BasicFilter,
+    BasicTransformer,
     ReadableBuffer,
     ReadRetType,
     WritableBuffer,
@@ -10,13 +10,13 @@ from .basic import (
 )
 
 __all__ = [
-    'SslFilter',
+    'SslTransformer',
 ]
 
 # _logger = logging.getLogger('kedixa.comm')
 
 
-class SslFilter(BasicFilter):
+class SslTransformer(BasicTransformer):
     def __init__(self, ssl_ctx: ssl.SSLContext, server_hostname=None):
         self._ssl_ctx: ssl.SSLContext   = ssl_ctx
         self._server_hostname: str      = server_hostname

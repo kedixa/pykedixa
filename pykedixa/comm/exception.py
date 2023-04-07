@@ -2,8 +2,8 @@ __all__ = [
     'CommException',
     'AdaptorException',
     'AdaptorEofError',
-    'FilterException',
-    'FilterEofError',
+    'TransformerException',
+    'TransformerEofError',
     'BadMessage',
 ]
 
@@ -31,11 +31,11 @@ class AdaptorEofError(AdaptorException):
     pass
 
 
-class FilterException(CommException):
+class TransformerException(CommException):
     pass
 
 
-class FilterEofError(FilterException):
+class TransformerEofError(TransformerException):
     pass
 
 

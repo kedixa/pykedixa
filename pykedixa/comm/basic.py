@@ -13,7 +13,7 @@ __all__ = [
     'CommunicateBase',
     'MessageBase',
     'BasicAdaptor',
-    'BasicFilter',
+    'BasicTransformer',
     'LoopbackAdaptor',
 
     'ReadableBuffer',
@@ -32,7 +32,7 @@ DEFAULT_LOOPBACK_ADAPTOR_MEMSIZE: int = 2 ** 24
 
 
 class CommFlags(enum.IntFlag):
-    # Support self.read_until, for example ReadUntilFilter
+    # Support self.read_until, for example ReadUntilTransformer
     READ_UNTIL      = 1
 
 
@@ -132,17 +132,17 @@ class BasicAdaptor(CommunicateBase):
     pass
 
 
-class BasicFilter(CommunicateBase):
+class BasicTransformer(CommunicateBase):
     def __init__(self):
         super().__init__()
         self._nxt: CommunicateBase = None
 
-    def bind_next(self, nxt: Union[BasicAdaptor, 'BasicFilter']):
+    def bind_next(self, nxt: Union[BasicAdaptor, 'BasicTransformer']):
         self._nxt = nxt
         return self
 
     def prepare_only(self) -> bool:
-        '''Whether the filter only need to call prepare'''
+        '''Whether the Transformer only need to call prepare'''
         return False
 
     async def write(self, buffer: ReadableBuffer) -> int:

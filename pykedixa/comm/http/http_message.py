@@ -9,7 +9,7 @@ from ..basic import (
 
     StrHelper,
 )
-from ..read_until_filter import ReadUntilFilter
+from ..read_until_transformer import ReadUntilTransformer
 from .http_code_map import get_http_code_phrase
 
 __all__ = [
@@ -211,7 +211,7 @@ class HttpMessage(MessageBase):
                 return True
         return False
 
-    async def _decode_header(self, c: ReadUntilFilter):
+    async def _decode_header(self, c: ReadUntilTransformer):
         '''
         Decode http header from c,
         save parsed header to self._headers.
@@ -237,7 +237,7 @@ class HttpMessage(MessageBase):
             if name:
                 self.add_header(name, value)
 
-    async def _decode_chunked_body(self, c: ReadUntilFilter):
+    async def _decode_chunked_body(self, c: ReadUntilTransformer):
         self._body = bytearray()
         line_end = b'\r\n'
         end_len = 2
@@ -265,12 +265,12 @@ class HttpMessage(MessageBase):
         self._body = bytes(self._body)
 
     async def decode(self, c: CommunicateBase):
-        extra_filter = False
-        r: ReadUntilFilter = c
+        extra_transformer = False
+        r: ReadUntilTransformer = c
 
         if not c.support_flags(CommFlags.READ_UNTIL):
-            extra_filter = True
-            r = ReadUntilFilter()
+            extra_transformer = True
+            r = ReadUntilTransformer()
             r.bind_next(c)
             await r.prepare()
 
@@ -283,7 +283,7 @@ class HttpMessage(MessageBase):
                 content_len = self._content_length()
                 self._body = bytes(await r.read_exactly(content_len))
 
-        if extra_filter:
+        if extra_transformer:
             # make sure no extra data in r, otherwise raise exception
             await r.finish()
 
