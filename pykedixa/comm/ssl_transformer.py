@@ -9,6 +9,10 @@ from .basic import (
     DEFAULT_MAX_READ_SIZE,
 )
 
+from .exception import (
+    TransformerEofError,
+)
+
 __all__ = [
     'SslTransformer',
 ]
@@ -69,6 +73,10 @@ class SslTransformer(BasicTransformer):
                 break
 
         await self._do_want_write()
+
+        if not ret:
+            # the ssl is shutdown by remote
+            raise TransformerEofError('SslTransformerEof')
         return ret
 
     async def write(self, buffer: ReadableBuffer) -> int:

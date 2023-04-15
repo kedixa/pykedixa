@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 import ssl
 from urllib.parse import urlparse
@@ -14,6 +15,8 @@ from .. import (
     ReadUntilTransformer,
 
     CommException,
+    TransformerEofError,
+    AdaptorEofError,
 
     getaddrinfo,
 )
@@ -28,6 +31,8 @@ __all__ = [
     'WebSocketClient',
     'WebSocketService',
 ]
+
+_logger = logging.getLogger('kedixa.comm.websocket')
 
 def _ws_parse_url(url: str):
     u = urlparse(url)
@@ -113,9 +118,11 @@ class WebSocketProcessor:
                 await self._hdl.on_frame(self, msg)
         except asyncio.CancelledError:
             return
-        except Exception as e:
-            # TODO log the error
-
+        except (TransformerEofError, AdaptorEofError) as e:
+            _logger.info("EofError %s", e.what())
+            return
+        except Exception:
+            _logger.exception("")
             # close when unknown exception, the connection may under invalid status
             await self.close()
 
