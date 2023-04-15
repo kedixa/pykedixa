@@ -18,7 +18,7 @@ class Connection:
             prepared: bool = False):
         self._adaptor: BasicAdaptor = adaptor
         self._comms: List[CommunicateBase] = []
-        self._opened: bool = prepared
+        self._closed: bool = not prepared
 
         self._c: CommunicateBase = self._adaptor
         self._lock: asyncio.Lock = asyncio.Lock()
@@ -44,23 +44,30 @@ class Connection:
     def context(self, context):
         self._context = context
 
+    def closed(self) -> bool:
+        return self._closed
+
     async def open(self):
-        if not self._opened:
+        if self._closed:
             await self._adaptor.prepare()
-            self._opened = True
+            self._closed = False
 
     async def close(self):
-        if self._opened:
-            self._opened = False
+        if not self._closed:
+            self._closed = True
             try:
                 for comm in self._comms[::-1]:
                     await comm.finish()
+                self._comms.clear()
             except:
                 # force close if gracefully finish failed
                 self._comms.clear()
                 self._c = self._adaptor
                 await self._adaptor.finish()
                 raise
+            else:
+                self._c = self._adaptor
+                await self._adaptor.finish()
 
     async def bind(self, next: BasicTransformer):
         if len(self._comms) == 0:
