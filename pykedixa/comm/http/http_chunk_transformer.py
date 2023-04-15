@@ -59,11 +59,11 @@ class HttpChunkTransformer(BasicTransformer):
 
     async def write(self, buffer: ReadableBuffer) -> int:
         blen = len(buffer)
-        buf = bytearray(str(blen).encode())
+        buf = bytearray(hex(blen).lstrip('0x').encode())
         buf.extend(b'\r\n')
         buf.extend(buffer)
         buf.extend(b'\r\n')
-        await self._nxt.write_all(buf)
+        return await self._nxt.write_all(buf)
 
     async def flush(self):
         await self._nxt.write(b'0\r\n\r\n')
