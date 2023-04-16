@@ -29,6 +29,10 @@ class Connection:
         return self._c
 
     @property
+    def adaptor(self) -> BasicAdaptor:
+        return self._adaptor
+
+    @property
     def lock(self) -> asyncio.Lock:
         return self._lock
 
