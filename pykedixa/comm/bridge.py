@@ -49,8 +49,7 @@ class CommBridge:
                 break
 
             with memoryview(buf) as view:
-                await self._to.write_all(view[:nread])
+                await self._to.write_all(view[:nread], flush=False)
 
             self._total_read += nread
             rlen = self._next_read_size()
-
