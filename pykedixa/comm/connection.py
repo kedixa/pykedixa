@@ -1,5 +1,5 @@
 import asyncio
-from typing import List
+from typing import List, Union
 
 from .basic import (
     CommunicateBase,
@@ -73,15 +73,26 @@ class Connection:
                 self._c = self._adaptor
                 await self._adaptor.finish()
 
-    async def bind(self, next: BasicTransformer):
+    async def bind(self, next: BasicTransformer, *, unbind_prepare_only: bool = False):
         if len(self._comms) == 0:
             next.bind_next(self._adaptor)
         else:
             next.bind_next(self._comms[-1])
 
         await next.prepare()
-        self._comms.append(next)
-        self._c = next
+
+        if not (next.prepare_only() and unbind_prepare_only):
+            self._comms.append(next)
+            self._c = next
+
+    async def unbind(self, *, type=None) -> Union[BasicTransformer, None]:
+        if len(self._comms) > 0 and (type is None or isinstance(self.c, type)):
+            ret: BasicTransformer = self.c
+            self._c = self._comms[-1] if len(self._comms) > 0 else self._adaptor
+            await ret.finish()
+            return ret
+
+        return None
 
     async def request(self, req: MessageBase, resp: MessageBase):
         '''
@@ -93,3 +104,11 @@ class Connection:
 
         if resp is not None:
             await resp.decode(self.c)
+
+    async def send(self, msg: MessageBase):
+        if msg:
+            await msg.encode(self.c)
+
+    async def receive(self, msg: MessageBase):
+        if msg:
+            await msg.decode(self.c)
