@@ -1,5 +1,6 @@
 import asyncio
 import socket
+import logging
 
 from .. import compat
 
@@ -18,6 +19,8 @@ __all__ = [
     'SyncTcpAdaptor',
     'TcpAdaptor',
 ]
+
+_logger = logging.getLogger('kedixa.comm.socket_adaptor')
 
 
 class SyncTcpAdaptor(BasicAdaptor):
@@ -91,7 +94,10 @@ class TcpAdaptor(BasicAdaptor):
             return
 
         if self._writer.can_write_eof():
-            self._writer.write_eof()
+            try:
+                self._writer.write_eof()
+            except OSError as e:
+                _logger.info(f'Exception when socket write eof {e}')
 
         self._writer.close()
 
