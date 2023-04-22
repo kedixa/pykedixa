@@ -23,7 +23,8 @@ class ReadUntilTransformer(BasicTransformer):
 
     async def finish(self):
         if self._data:
-            raise TransformerException('BadTransformerState: data is not empty when finish', self._data)
+            what = 'BadTransformerState: data is not empty when finish'
+            raise TransformerException(what, data=self._data)
 
     async def read(self, max_bytes: int = -1, *,
             buffer: WritableBuffer = None) -> ReadRetType:
