@@ -1,5 +1,8 @@
-from .basic import (
+from typing import Union
+
+from .import (
     CommunicateBase,
+    Connection,
 )
 from .exception import (
     AdaptorEofError,
@@ -13,9 +16,15 @@ __all__ = [
 
 class CommBridge:
     def __init__(self,
-            read_from: CommunicateBase, write_to: CommunicateBase,
+            read_from: Union[CommunicateBase, Connection],
+            write_to: Union[CommunicateBase, Connection],
             *,
             max_bytes: int = -1, max_per_read: int = 65536):
+        if isinstance(read_from, Connection):
+            read_from = read_from.c
+        if isinstance(write_to, Connection):
+            write_to = write_to.c
+
         self._from: CommunicateBase = read_from
         self._to: CommunicateBase   = write_to
         self._total_read: int       = 0
