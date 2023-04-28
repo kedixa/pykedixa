@@ -1,5 +1,7 @@
 import asyncio
 import queue
+import os
+import logging
 import concurrent.futures as fut
 import multiprocessing as mp
 from typing import List, Callable
@@ -9,6 +11,8 @@ __all__ = [
     'MContext',
     'MProcess'
 ]
+
+_logger = logging.getLogger('kedixa.mprocess')
 
 class MContext:
     def __init__(self,
@@ -84,12 +88,14 @@ class MContext:
 def _worker(func: Callable, ctx: MContext, *args, **kwargs):
     ctx.wait_start()
     try:
-        ret = func(ctx, *args, **kwargs)
+        return func(ctx, *args, **kwargs)
     except KeyboardInterrupt:
-        ret = None
+        pass
+    except:
+        _logger.exception(f'Exception pid:{os.getpid()}')
     finally:
         ctx.shutdown()
-    return ret
+    return None
 
 class MProcess:
     def __init__(self, nproc: int = 1, max_quesize: int = 256):
