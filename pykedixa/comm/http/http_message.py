@@ -112,7 +112,7 @@ class HttpHeaderMap:
         return None if hd is None else hd.values.copy()
 
     def del_header(self, name: str):
-        del self._hd_map[name.lower()]
+        self._hd_map.pop(name.lower(), None)
 
     def get_names(self):
         return self._hd_map.keys()
