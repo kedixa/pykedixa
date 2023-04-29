@@ -30,15 +30,13 @@ def _wrap_processor(proc: ProcessorType):
         adaptor = TcpAdaptor(addr=addr, reader=r, writer=w)
         conn = Connection(adaptor, prepared=True)
 
-        await conn.open()
         try:
-            ret = await proc(conn)
-        except Exception:
-            _logger.exception("")
-            ret = None
-        finally:
-            await conn.close()
-        return ret
+            async with conn:
+                return await proc(conn)
+        except BaseException as e:
+            _logger.error(f'Exception when process {ip}:{port} {type(e)}{e}')
+        return None
+
     return wrapper
 
 
