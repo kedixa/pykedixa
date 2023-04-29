@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import List, Union
 
 from .basic import (
@@ -11,6 +12,8 @@ from .basic import (
 __all__ = [
     'Connection',
 ]
+
+_logger = logging.getLogger('kedixa.comm.connection')
 
 
 class Connection:
@@ -47,6 +50,16 @@ class Connection:
     @context.setter
     def context(self, context):
         self._context = context
+
+    async def __aenter__(self):
+        await self.open()
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        try:
+            await self.close()
+        except:
+            _logger.exception('Exception when close Connection')
 
     def closed(self) -> bool:
         return self._closed
