@@ -56,6 +56,9 @@ async def getaddrinfo(host: str, port: int, *,
         family: int = socket.AF_INET,
         socktype: int = socket.SOCK_STREAM,
         proto: int = 0) -> List[SocketAddress]:
+    if len(host) > 0 and host[0] == '[' and host[-1] == ']':
+        host = host[1:-1]
+
     loop = asyncio.get_event_loop()
     addrs = await loop.getaddrinfo(host, port,
         family=family, type=socktype, proto=proto)
