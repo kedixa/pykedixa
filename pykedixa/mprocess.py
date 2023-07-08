@@ -34,12 +34,15 @@ class MContext:
         return self
 
     def __next__(self):
+        finished = self._finished
+
         while True:
             try:
                 return self.get_task(timeout=0.05)
             except queue.Empty:
-                if self.finished():
+                if finished:
                     raise StopIteration
+                finished = self.finished()
 
     async def __aiter__(self):
         if self._pool is None:
@@ -49,19 +52,23 @@ class MContext:
         return self
 
     async def __anext__(self):
-        try_sync = True
+        finished = self._finished
+
+        try:
+            return self.get_task(False, None)
+        except queue.Empty:
+            if finished:
+                raise StopAsyncIteration
+            finished = self.finished()
+
         while True:
             try:
-                if try_sync:
-                    return self.get_task(False, None)
                 async with self._sem:
-                    if self._finished:
-                        raise StopAsyncIteration
                     return await self._loop.run_in_executor(self._pool, self.get_task, True, 0.05)
             except queue.Empty:
-                try_sync = False
-                if self.finished():
+                if finished:
                     raise StopAsyncIteration
+                finished = self.finished()
 
     @property
     def procid(self) -> int:
