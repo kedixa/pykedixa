@@ -137,6 +137,17 @@ class MProcess:
             p.start()
         self._barrier.wait()
 
+    def alive_count(self) -> int:
+        cnt = 0
+        if self._procs:
+            for proc in self._procs:
+                if proc.is_alive():
+                    cnt += 1
+        return cnt
+
+    def all_alive(self) -> bool:
+        return self.alive_count() == self._nproc
+
     def stop(self):
         self._que.close()
         self._que.join_thread()
