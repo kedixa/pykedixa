@@ -44,7 +44,7 @@ class MContext:
                     raise StopIteration
                 finished = self.finished()
 
-    async def __aiter__(self):
+    def __aiter__(self):
         if self._pool is None:
             self._pool = fut.ThreadPoolExecutor(1)
             self._sem = asyncio.Semaphore(1)
