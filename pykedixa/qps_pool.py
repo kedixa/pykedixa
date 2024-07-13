@@ -12,11 +12,13 @@ class QpsPool:
 
     async def acquire(self, n: int = 1):
         wait_sec = self._get_wait_sec(n)
-        await asyncio.sleep(wait_sec)
+        if wait_sec > 0.0:
+            await asyncio.sleep(wait_sec)
 
     def sync_acquire(self, n: int = 1):
         wait_sec = self._get_wait_sec(n)
-        time.sleep(wait_sec)
+        if wait_sec > 0.0:
+            time.sleep(wait_sec)
 
     def _get_wait_sec(self, n: int) -> float:
         current = time.monotonic()
